@@ -17,19 +17,51 @@ public class ProducerServlet extends HttpServlet {
 	public void doGet(HttpServletRequest req, HttpServletResponse res) {
 
 		String message = req.getParameter("msg");
+		String routingKey = req.getParameter("key");
+		if (message == null || message.isBlank()) {
+			try {
+				res.getWriter().println("Message cannot be empty");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return;
+		}
+		
+		
+		 if (routingKey == null || routingKey.isBlank()) {
+	            try {
+					res.getWriter().println("Routing key cannot be empty");
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	            return;
+	        }
 		Channel channel = null;
 		try {
 			channel = RabbitMQUtil.getChannel();
 
-			channel.exchangeDeclare("order.exchange", "direct");
+			// declaring the exchange
+			channel.exchangeDeclare("pattern.exchange", "topic");
 
-			channel.queueDeclare("order.queue", true, false, false, null);
+			// declaring the queue
+			channel.queueDeclare("queue1", true, false, false, null);
+
+			channel.queueDeclare("queue2", true, false, false, null);
+
+			channel.queueDeclare("queue3", true, false, false, null);
 
 			// Bind Queue to Exchange
-			channel.queueBind("order.queue", "order.exchange", "order.created");
-	
+			
+			channel.queueBind("queue1", "pattern.exchange", "order.*");
+
+			channel.queueBind("queue2", "pattern.exchange", "order.update");
+
+			channel.queueBind("queue3", "pattern.exchange", "#");
+
 			// Publish Message
-			channel.basicPublish("order.exchange", "order.created", null, message.getBytes());
+			channel.basicPublish("pattern.exchange", routingKey, null, message.getBytes());	
 
 			res.getWriter().println("Message Sent Successfully");
 
