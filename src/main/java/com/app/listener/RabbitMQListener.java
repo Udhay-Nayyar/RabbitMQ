@@ -13,6 +13,7 @@ import com.app.consumer.OrderDeleteConsumer;
 @WebListener
 public class RabbitMQListener implements ServletContextListener {
 
+	//listiner
     
 	@Override
 	public void contextInitialized(ServletContextEvent sce)
